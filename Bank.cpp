@@ -190,14 +190,29 @@ inline void Transaction::setAmount(double amountTr)
 void sortAccounts(BankAccount ** list)
 {
 
-
-
-
-
-
-
-
-
+BankAccount *pAccount;
+     for (int i = 0; list[i + 1]->getAccountId() != 0; i++)
+     {
+          for (int j = i + 1; j >= 1; j--)
+          {
+               if (list[j]->getAccountId() < list[j - 1]->getAccountId())
+               {
+                    pAccount = list[j];
+                    list[j] = list[j - 1];
+                    list[j - 1] = pAccount;
+               }
+               else if (list[j]->getAccountId() == list[j - 1]->getAccountId() && list[j]->getType() < list[j - 1]->getType())
+               {
+                    pAccount = list[j];
+                    list[j] = list[j - 1];
+                    list[j - 1] = pAccount;
+               }
+               else
+               {
+                    break;
+               }
+          }
+     }
 }
 
 //******************************************************************
@@ -235,21 +250,28 @@ BankAccount ** readAccounts()
 	 
     while (inputFile && (counter < K_SizeMax - 1)){
         // YOU HAVE TO DO SOMETHING FROM HERE !!!
-	
-
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-
+	     BankAccount *p;
+          if (TypeRead == 01)
+          {
+               BankAccount temp{accountRead, TypeRead, nameRead, dateRead, balanceRead};
+               p = &temp;
+          }
+          else if (TypeRead == 02)
+          {
+               BankAccount temp{accountRead, TypeRead, nameRead, dateRead, balanceRead};
+               p = &temp;
+          }
+          else if (TypeRead == 03)
+          {
+               DepositAccount temp{accountRead, TypeRead, nameRead, dateRead, balanceRead, nbyearRead};
+               p = &temp;
+          }
+          else if (TypeRead == 04)
+          {
+               LoanAccount temp{accountRead, TypeRead, nameRead, dateRead, balanceRead, nbyearRead, RateRead};
+               p = &temp;
+          }
+          pAccount[counter] = p;
         // UNTIL THIS POINT.
 
           inputFile >> accountRead >> TypeRead >> dateRead >> balanceRead >> nbyearRead >> RateRead;
@@ -361,18 +383,35 @@ void LoanAccount::executeTransaction(const Transaction trans)
 // Output: Nothing.
 //*************************************************************************
 void updateAccounts(BankAccount ** listAccounts) {
+
+     string line;
+
      ifstream inputFile("transact.txt");	// Opening the input file
 
-	 
-	 
-	 
-	 
-	 
-	 
-	 
-	 
-	 
-	 
+     if (!inputFile.is_open()) {
+          cout << "WARNING. TRANSACT FILE NOT PRESENT." << endl;
+          exit(0);
+     }
+
+    int accountId, accountType, date_of_trans, trans_code;
+    double amount;
+    
+
+    while (inputFile){
+
+          inputFile >> accountId >> accountType >> date_of_trans >> trans_code >> amount;
+          
+          Transaction new_transaction{accountId, accountType, date_of_trans, trans_code, amount};
+          
+          int i = 0;
+          while (i < sizeof(listAccounts)){
+               BankAccount * cur_account = *(listAccounts + i);
+               if (cur_account->getAccountId() == accountId) {
+                    cur_account->executeTransaction(new_transaction);
+                    break;
+               }
+          }
+    } 
 }
 
 //******************************************************************************
@@ -383,24 +422,29 @@ void updateAccounts(BankAccount ** listAccounts) {
 //******************************************************************************
 void displayAccounts(BankAccount ** listAccounts)
 {
-    cout << endl << endl << endl;
-    
-    Bool find[K_SizeMax];
-    for(int k = 0; k < K_SizeMax; k++) {find[k] = FALSE;}
+     cout << endl << endl << endl;
+     
+     Bool find[K_SizeMax];
+     for(int k = 0; k < K_SizeMax; k++) {find[k] = FALSE;}
+ 
+     cout << "                       THE REPORT OF THE BANK ACCOUNTS OF CLIENTS" << endl;
+     cout << "                       ------------------------------------------" << endl << endl;
+	 
+     int i = 0;
+     int num_of_accounts = sizeof(listAccounts);
 
-    cout << "                       THE REPORT OF THE BANK ACCOUNTS OF CLIENTS" << endl;
-    cout << "                       ------------------------------------------" << endl << endl;
-	
-    int i = 0;
-	
+     while (i < num_of_accounts){
 
-	
-	
-	
-	
-	
-	
-	
+          BankAccount * cur_account = *(listAccounts + i);
+          
+          cout << cur_account->getType() << "Account \t\t" << cur_account->getAccountId() << ":" << endl;;
+          cout << "\tClient Name:\t\t" << cur_account->getClientName() << endl;
+          cout << "\tBalance\t\t\t" << cur_account->getBalance() << endl;;
+          cout << "\tLast Updated::\t\t\t" << cur_account->getUpdatedate() << endl << endl << endl;
+          
+          i = i+1;
+
+     }	
 	
 }
 
@@ -408,7 +452,7 @@ void displayAccounts(BankAccount ** listAccounts)
 
 
 int main()
-{
+{    
     BankAccount ** list = readAccounts();
     sortAccounts(list);
     displayAccounts(list);
