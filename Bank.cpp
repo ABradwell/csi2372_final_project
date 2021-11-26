@@ -420,13 +420,14 @@ void updateAccounts(BankAccount ** listAccounts) {
                }
 
                // If the equivilant account is correctly found.
-               if (b_p->getAccountId() == accountId) {
+               if (b_p->getAccountId() == accountId && b_p->getType() == accountType) {
                     
                     // If transaction is valid for the found account, execute it
                     if (!b_p->validateTransaction(new_transaction)) {
                          cout << "Invalid transaction on account #" << b_p->getAccountId() << endl;
                          break;
                     }
+
                     b_p->executeTransaction(new_transaction);
                     break;
                }
@@ -450,18 +451,35 @@ void displayAccounts(BankAccount ** listAccounts)
      cout << "                       THE REPORT OF THE BANK ACCOUNTS OF CLIENTS" << endl;
      cout << "                       ------------------------------------------" << endl << endl;
      
-     // For each bank account, use the overloaded builtin-print method defined above
-     for (int i = 0; i < K_SizeMax; i++) {
-     
-          BankAccount *b_p = *(listAccounts + i);
-          if (b_p->getAccountId() == 0 && b_p->getBalance() == 0) {
-               break;    // All accounts have been printed. Exit method sucessfully.
+
+     float client_total_sum;
+     for (int j = 0; listAccounts[j]->getAccountId() != 0; j++) {
+          
+          BankAccount *cn_p = *(listAccounts + j);
+
+          if (find[j] ==  TRUE) {
+               continue;      // Client already printed
           }
 
-          b_p->print();
-          cout << endl;
-     }
+          cout << "Client Name: " << cn_p->getClientName() << endl;
+          client_total_sum = 0;
+         
+          // For each bank account, use the overloaded builtin-print method defined above
+          for (int i = 0; listAccounts[i]->getAccountId() != 0; i++) {
 
+               BankAccount *b_p = *(listAccounts + i);
+
+               if (strcmp(cn_p->getClientName(), b_p->getClientName()) == 0 && find[i] == FALSE) {
+                    b_p->print(); cout << endl;
+                    find[i] = TRUE;
+                    client_total_sum = client_total_sum + b_p->getBalance();
+
+               }
+          }
+
+          cout << "TOTAL ACCOUNTS: " << client_total_sum << endl;
+          cout << "----------------------------------------" << endl<<endl;
+     }
 }
 
 
