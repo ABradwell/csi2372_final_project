@@ -190,11 +190,14 @@ inline void Transaction::setAmount(double amountTr)
 void sortAccounts(BankAccount ** list)
 {
 
-BankAccount *pAccount;
+     cout << "SORTING METHOD" << endl;
+
+     BankAccount *pAccount;
      for (int i = 0; list[i + 1]->getAccountId() != 0; i++)
      {
           for (int j = i + 1; j >= 1; j--)
           {
+
                if (list[j]->getAccountId() < list[j - 1]->getAccountId())
                {
                     pAccount = list[j];
@@ -249,37 +252,38 @@ BankAccount ** readAccounts()
     inputFile.getline(nameRead, 60);
 	 
     while (inputFile && (counter < K_SizeMax - 1)){
-        // YOU HAVE TO DO SOMETHING FROM HERE !!!
-	     BankAccount *p;
+
+          // YOU HAVE TO DO SOMETHING FROM HERE !!!
+          BankAccount *temp_core;
           if (TypeRead == 01)
-          {
-               BankAccount temp{accountRead, TypeRead, nameRead, dateRead, balanceRead};
-               p = &temp;
+          {    
+               temp_core = new BankAccount{accountRead, TypeRead, nameRead, dateRead, balanceRead};
           }
           else if (TypeRead == 02)
           {
-               BankAccount temp{accountRead, TypeRead, nameRead, dateRead, balanceRead};
-               p = &temp;
+               temp_core = new BankAccount{accountRead, TypeRead, nameRead, dateRead, balanceRead};
           }
           else if (TypeRead == 03)
           {
-               DepositAccount temp{accountRead, TypeRead, nameRead, dateRead, balanceRead, nbyearRead};
-               p = &temp;
+               temp_core = new DepositAccount{accountRead, TypeRead, nameRead, dateRead, balanceRead, nbyearRead};
           }
           else if (TypeRead == 04)
           {
-               LoanAccount temp{accountRead, TypeRead, nameRead, dateRead, balanceRead, nbyearRead, RateRead};
-               p = &temp;
+               temp_core = new LoanAccount{accountRead, TypeRead, nameRead, dateRead, balanceRead, nbyearRead, RateRead};
           }
-          pAccount[counter] = p;
-        // UNTIL THIS POINT.
+
+          *pAccount = temp_core;
+
+          // UNTIL THIS POINT.
 
           inputFile >> accountRead >> TypeRead >> dateRead >> balanceRead >> nbyearRead >> RateRead;
           inputFile.getline(nameRead, 60);
           pAccount++;
           counter++;
-    }
+     }
+
      *pAccount = new BankAccount();
+
      return listAccounts;
 }
 
@@ -390,7 +394,7 @@ void updateAccounts(BankAccount ** listAccounts) {
 
      if (!inputFile.is_open()) {
           cout << "WARNING. TRANSACT FILE NOT PRESENT." << endl;
-          exit(0);
+          exit(0);       // Fatal Error opening transction log
      }
 
     int accountId, accountType, date_of_trans, trans_code;
@@ -398,16 +402,32 @@ void updateAccounts(BankAccount ** listAccounts) {
     
 
     while (inputFile){
-
-          inputFile >> accountId >> accountType >> date_of_trans >> trans_code >> amount;
           
+          // Load information from file, and convert it into a transaction object
+          inputFile >> accountId >> accountType >> date_of_trans >> trans_code >> amount;
           Transaction new_transaction{accountId, accountType, date_of_trans, trans_code, amount};
           
+          // Iterate through each account, for each new transaction. When the correct account is found, apply transaction IF VALID
           int i = 0;
-          while (i < sizeof(listAccounts)){
-               BankAccount * cur_account = *(listAccounts + i);
-               if (cur_account->getAccountId() == accountId) {
-                    cur_account->executeTransaction(new_transaction);
+          for (int i = 0; i < K_SizeMax; i++) {
+               
+               BankAccount *b_p = *(listAccounts + i);
+
+               // Last null-account found. All accounts have been searched. Move on to next transactions
+               if (b_p->getAccountId() == 0 && b_p->getBalance() == 0) {
+                    cout << "No account found for account #" << accountId << endl;
+                    break;
+               }
+
+               // If the equivilant account is correctly found.
+               if (b_p->getAccountId() == accountId) {
+                    
+                    // If transaction is valid for the found account, execute it
+                    if (!b_p->validateTransaction(new_transaction)) {
+                         cout << "Invalid transaction on account #" << b_p->getAccountId() << endl;
+                         break;
+                    }
+                    b_p->executeTransaction(new_transaction);
                     break;
                }
           }
@@ -429,23 +449,19 @@ void displayAccounts(BankAccount ** listAccounts)
  
      cout << "                       THE REPORT OF THE BANK ACCOUNTS OF CLIENTS" << endl;
      cout << "                       ------------------------------------------" << endl << endl;
-	 
-     int i = 0;
-     int num_of_accounts = sizeof(listAccounts);
+     
+     // For each bank account, use the overloaded builtin-print method defined above
+     for (int i = 0; i < K_SizeMax; i++) {
+     
+          BankAccount *b_p = *(listAccounts + i);
+          if (b_p->getAccountId() == 0 && b_p->getBalance() == 0) {
+               break;    // All accounts have been printed. Exit method sucessfully.
+          }
 
-     while (i < num_of_accounts){
+          b_p->print();
+          cout << endl;
+     }
 
-          BankAccount * cur_account = *(listAccounts + i);
-          
-          cout << cur_account->getType() << "Account \t\t" << cur_account->getAccountId() << ":" << endl;;
-          cout << "\tClient Name:\t\t" << cur_account->getClientName() << endl;
-          cout << "\tBalance\t\t\t" << cur_account->getBalance() << endl;;
-          cout << "\tLast Updated::\t\t\t" << cur_account->getUpdatedate() << endl << endl << endl;
-          
-          i = i+1;
-
-     }	
-	
 }
 
 
