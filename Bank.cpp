@@ -269,6 +269,7 @@ BankAccount ** readAccounts()
           }
           else if (TypeRead == 04)
           {
+               balanceRead = balanceRead + ((balanceRead * nbyearRead * RateRead)/36000);
                temp_core = new LoanAccount{accountRead, TypeRead, nameRead, dateRead, balanceRead, nbyearRead, RateRead};
           }
 
@@ -415,7 +416,7 @@ void updateAccounts(BankAccount ** listAccounts) {
 
                // Last null-account found. All accounts have been searched. Move on to next transactions
                if (b_p->getAccountId() == 0 && b_p->getBalance() == 0) {
-                    cout << "No account found for account #" << accountId << endl;
+                    cout << "No account found for account #" << accountId << " Type " << accountType << endl;
                     break;
                }
 
